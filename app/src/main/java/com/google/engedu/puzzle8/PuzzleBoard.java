@@ -16,12 +16,35 @@ public class PuzzleBoard {
             { 0, 1 }
     };
     private ArrayList<PuzzleTile> tiles;
+    private int steps;
+    private PuzzleBoard previousBoard;
 
     PuzzleBoard(Bitmap bitmap, int parentWidth) {
+        int count=0, size=parentWidth/NUM_TILES;
+        tiles = new ArrayList<PuzzleTile>();
+        Bitmap initial=Bitmap.createScaledBitmap(bitmap, parentWidth, parentWidth, true);
+        for(int i=0; i<NUM_TILES; i++){
+            for(int j=0;j<NUM_TILES;j++){
+                if(count < 8) {
+                    Bitmap tileItem = Bitmap.createBitmap(initial, i*size, j*size, size, size);
+                    PuzzleTile tile = new PuzzleTile(tileItem, count);
+                    tiles.add(tile);
+                    count++;
+                }
+                else
+                    tiles.add(null);
+            }
+        }
     }
 
     PuzzleBoard(PuzzleBoard otherBoard) {
         tiles = (ArrayList<PuzzleTile>) otherBoard.tiles.clone();
+        steps = otherBoard.steps+1;
+        previousBoard = otherBoard;
+    }
+
+    public PuzzleBoard getPreviousBoard(){
+        return previousBoard;
     }
 
     public void reset() {
@@ -93,11 +116,43 @@ public class PuzzleBoard {
     }
 
     public ArrayList<PuzzleBoard> neighbours() {
-        return null;
+        ArrayList<PuzzleBoard> temp = new ArrayList<>();
+        int xco_ord, yco_ord, i, j=0;
+        for(i=0; i<NUM_TILES;i++){
+            for(j=0;j<NUM_TILES;j++){
+                if(tiles.get(i*NUM_TILES+j)==null)
+                    break;
+            }
+            if (j!=NUM_TILES)
+                break;
+        }
+        xco_ord=i;
+        yco_ord=j;
+
+        for (i=0; i<4; i++){
+            int x=xco_ord+NEIGHBOUR_COORDS[i][0];
+            int y=yco_ord+NEIGHBOUR_COORDS[i][1];
+            if(x>=0 && y>0 && x<NUM_TILES && y<NUM_TILES){
+                PuzzleBoard dup=new PuzzleBoard(this);
+                dup.swapTiles(yco_ord*NUM_TILES+xco_ord, y*NUM_TILES+x);
+                temp.add(dup);
+            }
+        }
+        return temp;
     }
 
     public int priority() {
-        return 0;
+        int count=steps, act_pos;
+        for (int i=0; i<NUM_TILES; i++){
+            for (int j=0; j<NUM_TILES; j++){
+                if (tiles.get(NUM_TILES * i + j) == null)
+                    continue;
+                act_pos = tiles.get(NUM_TILES * i + j).getNumber();
+                count += Math.abs( (act_pos / NUM_TILES) - i );
+                count += Math.abs( (act_pos % NUM_TILES) - j );
+            }
+        }
+        return count;
     }
 
 }
