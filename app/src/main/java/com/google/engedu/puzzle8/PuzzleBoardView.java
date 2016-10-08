@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class PuzzleBoardView extends View {
         animation = null;
     }
 
-    public void initialize(Bitmap imageBitmap) {
+    public void initialize(Bitmap imageBitmap, RelativeLayout container) {
         int width = getWidth();
         puzzleBoard = new PuzzleBoard(imageBitmap, width);
     }
@@ -78,4 +79,5 @@ public class PuzzleBoardView extends View {
 
     public void solve() {
     }
+
 }
