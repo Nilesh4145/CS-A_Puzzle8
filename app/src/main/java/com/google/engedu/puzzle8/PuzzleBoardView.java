@@ -4,12 +4,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.PriorityQueue;
 import java.util.Random;
 
 public class PuzzleBoardView extends View {
@@ -19,13 +24,20 @@ public class PuzzleBoardView extends View {
     private ArrayList<PuzzleBoard> animation;
     private Random random = new Random();
 
+    private Comparator<PuzzleBoard> PQComparator = new Comparator<PuzzleBoard>() {
+        @Override
+        public int compare(PuzzleBoard lhs, PuzzleBoard rhs) {
+            return lhs.priority() - rhs.priority();
+        }
+    };
+
     public PuzzleBoardView(Context context) {
         super(context);
         activity = (Activity) context;
         animation = null;
     }
 
-    public void initialize(Bitmap imageBitmap, RelativeLayout container) {
+    public void initialize(Bitmap imageBitmap) {
         int width = getWidth();
         puzzleBoard = new PuzzleBoard(imageBitmap, width);
     }
@@ -53,7 +65,11 @@ public class PuzzleBoardView extends View {
 
     public void shuffle() {
         if (animation == null && puzzleBoard != null) {
-            // Do something. Then:
+            ArrayList<PuzzleBoard> board;
+            for (int i = 0; i < NUM_SHUFFLE_STEPS; i++) {
+                board = puzzleBoard.neighbours();
+                puzzleBoard = board.get(random.nextInt(board.size()));
+            }
             puzzleBoard.reset();
             invalidate();
         }
@@ -62,7 +78,7 @@ public class PuzzleBoardView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (animation == null && puzzleBoard != null) {
-            switch(event.getAction()) {
+            switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     if (puzzleBoard.click(event.getX(), event.getY())) {
                         invalidate();
@@ -78,6 +94,24 @@ public class PuzzleBoardView extends View {
     }
 
     public void solve() {
+        PriorityQueue<PuzzleBoard> pq=new PriorityQueue<>(1,PQComparator);
+        PuzzleBoard pb=new PuzzleBoard(puzzleBoard);
+        pb.setPreviousBoard(null);
+        pq.add(pb);
+        while (!pq.isEmpty()){
+            PuzzleBoard bs=pq.poll();
+            if(!bs.resolved())
+                pq.addAll(bs.neighbours());
+            else{
+                ArrayList<PuzzleBoard> steps=new ArrayList<>();
+                while (bs.getPreviousBoard()!=null){
+                    steps.add(bs);
+                    bs=bs.getPreviousBoard();
+                }
+                Collections.reverse(steps);
+                animation=steps;
+                invalidate();
+            }
+        }
     }
-
 }

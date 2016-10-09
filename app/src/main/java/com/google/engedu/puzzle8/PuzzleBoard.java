@@ -10,28 +10,28 @@ public class PuzzleBoard {
 
     private static final int NUM_TILES = 3;
     private static final int[][] NEIGHBOUR_COORDS = {
-            { -1, 0 },
-            { 1, 0 },
-            { 0, -1 },
-            { 0, 1 }
+            {-1, 0},
+            {1, 0},
+            {0, -1},
+            {0, 1}
     };
-    private ArrayList<PuzzleTile> tiles;
-    private int steps;
-    private PuzzleBoard previousBoard;
+    ArrayList<PuzzleTile> tiles;
+    public int steps;
+    public PuzzleBoard previousBoard;
 
     PuzzleBoard(Bitmap bitmap, int parentWidth) {
-        int count=0, size=parentWidth/NUM_TILES;
+        int count = 0;
+        int size = parentWidth / NUM_TILES;
         tiles = new ArrayList<PuzzleTile>();
-        Bitmap initial=Bitmap.createScaledBitmap(bitmap, parentWidth, parentWidth, true);
-        for(int i=0; i<NUM_TILES; i++){
-            for(int j=0;j<NUM_TILES;j++){
-                if(count < 8) {
-                    Bitmap tileItem = Bitmap.createBitmap(initial, i*size, j*size, size, size);
+        Bitmap initial = Bitmap.createScaledBitmap(bitmap, parentWidth, parentWidth, true);
+        for (int i = 0; i < NUM_TILES; i++) {
+            for (int j = 0; j < NUM_TILES; j++) {
+                if (count < 8) {
+                    Bitmap tileItem = Bitmap.createBitmap(initial, j * size, i * size, size, size);
                     PuzzleTile tile = new PuzzleTile(tileItem, count);
                     tiles.add(tile);
                     count++;
-                }
-                else
+                } else
                     tiles.add(null);
             }
         }
@@ -39,12 +39,15 @@ public class PuzzleBoard {
 
     PuzzleBoard(PuzzleBoard otherBoard) {
         tiles = (ArrayList<PuzzleTile>) otherBoard.tiles.clone();
-        steps = otherBoard.steps+1;
+        steps = otherBoard.steps + 1;
         previousBoard = otherBoard;
     }
 
-    public PuzzleBoard getPreviousBoard(){
+    public PuzzleBoard getPreviousBoard() {
         return previousBoard;
+    }
+    public void setPreviousBoard(PuzzleBoard previousBoard){
+        this.previousBoard=previousBoard;
     }
 
     public void reset() {
@@ -117,24 +120,24 @@ public class PuzzleBoard {
 
     public ArrayList<PuzzleBoard> neighbours() {
         ArrayList<PuzzleBoard> temp = new ArrayList<>();
-        int xco_ord, yco_ord, i, j=0;
-        for(i=0; i<NUM_TILES;i++){
-            for(j=0;j<NUM_TILES;j++){
-                if(tiles.get(i*NUM_TILES+j)==null)
+        int xco_ord, yco_ord, i, j = 0;
+        for (i = 0; i < NUM_TILES; i++) {
+            for (j = 0; j < NUM_TILES; j++) {
+                if (tiles.get(i * NUM_TILES + j) == null)
                     break;
             }
-            if (j!=NUM_TILES)
+            if (j != NUM_TILES)
                 break;
         }
-        xco_ord=i;
-        yco_ord=j;
+        xco_ord = i;
+        yco_ord = j;
 
-        for (i=0; i<4; i++){
-            int x=xco_ord+NEIGHBOUR_COORDS[i][0];
-            int y=yco_ord+NEIGHBOUR_COORDS[i][1];
-            if(x>=0 && y>0 && x<NUM_TILES && y<NUM_TILES){
-                PuzzleBoard dup=new PuzzleBoard(this);
-                dup.swapTiles(yco_ord*NUM_TILES+xco_ord, y*NUM_TILES+x);
+        for (i = 0; i < 4; i++) {
+            int x = xco_ord + NEIGHBOUR_COORDS[i][0];
+            int y = yco_ord + NEIGHBOUR_COORDS[i][1];
+            if (x >= 0 && y > 0 && x < NUM_TILES && y < NUM_TILES) {
+                PuzzleBoard dup = new PuzzleBoard(this);
+                dup.swapTiles(yco_ord * NUM_TILES + xco_ord, y * NUM_TILES + x);
                 temp.add(dup);
             }
         }
@@ -142,17 +145,23 @@ public class PuzzleBoard {
     }
 
     public int priority() {
-        int count=steps, act_pos;
-        for (int i=0; i<NUM_TILES; i++){
-            for (int j=0; j<NUM_TILES; j++){
-                if (tiles.get(NUM_TILES * i + j) == null)
-                    continue;
-                act_pos = tiles.get(NUM_TILES * i + j).getNumber();
-                count += Math.abs( (act_pos / NUM_TILES) - i );
-                count += Math.abs( (act_pos % NUM_TILES) - j );
+        int manhattanDistance = 0, correctX, correctY, x, y, num;
+
+
+        for (int i = 0; i < NUM_TILES * NUM_TILES; i++) {
+            PuzzleTile a = tiles.get(i);
+            if (a != null) {
+                x = i % NUM_TILES;
+                y = i / NUM_TILES;
+                num = a.getNumber();
+                correctX = num % NUM_TILES;
+                correctY = num / NUM_TILES;
+
+                int dist = Math.abs(x - correctX) + Math.abs(y - correctY);
+                manhattanDistance += dist;
             }
         }
-        return count;
+        return manhattanDistance;
     }
 
 }
